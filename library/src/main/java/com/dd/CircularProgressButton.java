@@ -78,14 +78,23 @@ public class CircularProgressButton extends RobotoButton {
 
     public void setIconComplete(Drawable mIconComplete) {
         this.mIconComplete = mIconComplete;
+        if(mState.equals(State.COMPLETE)) {
+            onShow(State.COMPLETE);
+        }
     }
 
     public void setIconIdle(Drawable mIconIdle) {
         this.mIconIdle = mIconIdle;
+        if(mState.equals(State.IDLE)) {
+            onShow(State.IDLE);
+        }
     }
 
     public void setIconError(Drawable mIconError) {
         this.mIconError = mIconError;
+        if(mState.equals(State.ERROR)) {
+            onShow(State.ERROR);
+        }
     }
 
     private void init(Context context, AttributeSet attributeSet) {
