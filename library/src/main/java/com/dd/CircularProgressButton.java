@@ -80,6 +80,10 @@ public class CircularProgressButton extends RobotoButton {
         this.mIconComplete = mIconComplete;
     }
 
+    public void setIconIdle(Drawable mIconIdle) {
+        this.mIconIdle = mIconIdle;
+    }
+
     public void setIconError(Drawable mIconError) {
         this.mIconError = mIconError;
     }
