@@ -18,4 +18,8 @@ android {
     }
 }
 
+dependencies {
+    compile 'com.github.johnkil.android-robototextview:robototextview:2.1.0'
+}
+
 apply from: 'https://raw.githubusercontent.com/jpardogo/gradle-mvn-push/master/gradle-mvn-push.gradle'

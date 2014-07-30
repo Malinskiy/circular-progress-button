@@ -14,10 +14,10 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.StateSet;
-import android.widget.Button;
 import com.dd.circular.progress.button.R;
+import com.devspark.robototextview.widget.RobotoButton;
 
-public class CircularProgressButton extends Button {
+public class CircularProgressButton extends RobotoButton {
 
     public static final int IDLE_STATE_PROGRESS  = 0;
     public static final int ERROR_STATE_PROGRESS = -1;
