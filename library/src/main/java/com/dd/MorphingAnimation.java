@@ -1,16 +1,12 @@
 package com.dd;
 
-import android.animation.Animator;
-import android.animation.AnimatorSet;
-import android.animation.ArgbEvaluator;
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
+import android.animation.*;
+import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.widget.TextView;
 
 class MorphingAnimation {
 
-    public static final int DURATION_NORMAL = 400;
     public static final int DURATION_INSTANT = 1;
 
     private OnAnimationEndListener mListener;
@@ -25,16 +21,21 @@ class MorphingAnimation {
 
     private int mFromStrokeColor;
     private int mToStrokeColor;
+    private int mStrokeWidth;
 
     private float mFromCornerRadius;
     private float mToCornerRadius;
 
+    private boolean mFromFill;
+    private boolean mToFill;
+
     private float mPadding;
 
-    private TextView mView;
-    private StrokeGradientDrawable mDrawable;
+    private TextView         mView;
+    private GradientDrawable mDrawable;
+    private AnimatorSet      animatorSet;
 
-    public MorphingAnimation(TextView viewGroup, StrokeGradientDrawable drawable) {
+    public MorphingAnimation(TextView viewGroup, GradientDrawable drawable) {
         mView = viewGroup;
         mDrawable = drawable;
     }
@@ -71,6 +72,10 @@ class MorphingAnimation {
         mToStrokeColor = toStrokeColor;
     }
 
+    public void setStrokeWidth(int strokeWidth) {
+        mStrokeWidth = strokeWidth;
+    }
+
     public void setFromCornerRadius(float fromCornerRadius) {
         mFromCornerRadius = fromCornerRadius;
     }
@@ -79,13 +84,20 @@ class MorphingAnimation {
         mToCornerRadius = toCornerRadius;
     }
 
+    public void setToFill(boolean mToFill) {
+        this.mToFill = mToFill;
+    }
+
+    public void setFromFill(boolean mFromFill) {
+        this.mFromFill = mFromFill;
+    }
+
     public void setPadding(float padding) {
         mPadding = padding;
     }
 
     public void start() {
         ValueAnimator widthAnimation = ValueAnimator.ofInt(mFromWidth, mToWidth);
-        final GradientDrawable gradientDrawable = mDrawable.getGradientDrawable();
         widthAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -94,7 +106,8 @@ class MorphingAnimation {
                 int rightOffset;
                 int padding;
 
-                if (mFromWidth > mToWidth) {
+                boolean reducingSize = mFromWidth > mToWidth;
+                if (reducingSize) {
                     leftOffset = (mFromWidth - value) / 2;
                     rightOffset = mFromWidth - leftOffset;
                     padding = (int) (mPadding * animation.getAnimatedFraction());
@@ -104,24 +117,41 @@ class MorphingAnimation {
                     padding = (int) (mPadding - mPadding * animation.getAnimatedFraction());
                 }
 
-                gradientDrawable
-                        .setBounds(leftOffset + padding, padding, rightOffset - padding, mView.getHeight() - padding);
+                int left = leftOffset + padding;
+                int top = padding;
+                int right = rightOffset - padding;
+                int bottom = mView.getHeight() - padding;
+                mDrawable.setBounds(left, top, right, bottom);
             }
         });
 
-        ObjectAnimator bgColorAnimation = ObjectAnimator.ofInt(gradientDrawable, "color", mFromColor, mToColor);
-        bgColorAnimation.setEvaluator(new ArgbEvaluator());
-
-        ObjectAnimator strokeColorAnimation =
-                ObjectAnimator.ofInt(mDrawable, "strokeColor", mFromStrokeColor, mToStrokeColor);
+        ValueAnimator strokeColorAnimation = ValueAnimator.ofInt(mFromStrokeColor, mToStrokeColor);
+        strokeColorAnimation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                mDrawable.setStroke(mStrokeWidth, (Integer) animation.getAnimatedValue());
+            }
+        });
         strokeColorAnimation.setEvaluator(new ArgbEvaluator());
 
         ObjectAnimator cornerAnimation =
-                ObjectAnimator.ofFloat(gradientDrawable, "cornerRadius", mFromCornerRadius, mToCornerRadius);
+                ObjectAnimator.ofFloat(mDrawable, "cornerRadius", mFromCornerRadius, mToCornerRadius);
 
-        AnimatorSet animatorSet = new AnimatorSet();
+        ObjectAnimator bgColorAnimation;
+        if(mFromFill != mToFill) {
+            if(mToFill) {
+                bgColorAnimation = ObjectAnimator.ofInt(mDrawable, "color", Color.TRANSPARENT, mToColor);
+            } else {
+                bgColorAnimation = ObjectAnimator.ofInt(mDrawable, "color", mFromColor, Color.TRANSPARENT);
+            }
+        } else {
+            bgColorAnimation = ObjectAnimator.ofInt(mDrawable, "color", mFromColor, mToColor);
+        }
+        bgColorAnimation.setEvaluator(new ArgbEvaluator());
+
+        animatorSet = new AnimatorSet();
         animatorSet.setDuration(mDuration);
-        animatorSet.playTogether(widthAnimation, bgColorAnimation, strokeColorAnimation, cornerAnimation);
+        animatorSet.playTogether(strokeColorAnimation, widthAnimation, bgColorAnimation, cornerAnimation);
         animatorSet.addListener(new Animator.AnimatorListener() {
             @Override
             public void onAnimationStart(Animator animation) {
@@ -145,6 +175,11 @@ class MorphingAnimation {
 
             }
         });
+
         animatorSet.start();
+    }
+
+    public void end() {
+        if (animatorSet != null) animatorSet.end();
     }
 }
